@@ -42,6 +42,7 @@ public class Switch extends Device
 
 		if (table.has_entry(dst_mac)){
 			BridgeEntry b = table.get_entry(dst_mac);
+			sendPacket(etherPacket, b.iface);
 		}
 		else {
 			// broadcast
