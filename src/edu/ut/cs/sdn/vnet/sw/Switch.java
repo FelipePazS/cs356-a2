@@ -1,12 +1,11 @@
 package edu.ut.cs.sdn.vnet.sw;
 
 import net.floodlightcontroller.packet.Ethernet;
+import net.floodlightcontroller.packet.MACAddress;
 import edu.ut.cs.sdn.vnet.Device;
 import edu.ut.cs.sdn.vnet.DumpFile;
 import edu.ut.cs.sdn.vnet.Iface;
 import java.util.*;
-
-int MAX_TTL = 15; // time in seconds that marks the lifespan of an entry in the table
 
 /**
  * @author Aaron Gember-Jacobson
@@ -18,7 +17,8 @@ public class Switch extends Device
 	 * @param host hostname for the router
 	 */
 
-	Table table; 
+	Table table;
+
 	public Switch(String host, DumpFile logfile)
 	{
 		super(host,logfile);
@@ -34,6 +34,7 @@ public class Switch extends Device
 	{
 		System.out.println("*** -> Received packet: " +
                 etherPacket.toString().replace("\n", "\n\t"));
+
 		MACAddress dst_mac = etherPacket.getDestinationMAC();
 		MACAddress src_mac = etherPacket.getSourceMAC(); 
 		table.sweep();
@@ -44,9 +45,9 @@ public class Switch extends Device
 		}
 		else {
 			// broadcast
-			for ((Map.Entry<String,Iface> entry : interfaces.entrySet(){
-				if(!entry.getValue().toSrting().equals(inIface.toString())){
-					sendPacket(etherPacket, entry.getKey());
+			for (String interface_string : interfaces.keySet()){
+				if(!interfaces.get(interface_string).toString().equals(inIface.toString())){
+					sendPacket(etherPacket, interfaces.get(interface_string));
 				}
 			}
 		}
@@ -54,13 +55,13 @@ public class Switch extends Device
 }
 
 class BridgeEntry {
-	MACAddress MacAddr; // destination
-	Iface interface; // interface to send the package to
-	int update_time;
+	public MACAddress MacAddr; // destination
+	public Iface iface; // interface to send the package to
+	public int update_time;
 
-	public BridgeEntry(MACAddress MacAddr,Iface interface){
-		this.MacAddr = macAddress;
-		this.interface = interface;
+	public BridgeEntry(MACAddress _MacAddr,Iface _interface){
+		MacAddr = _MacAddr;
+		iface = _interface;
 		update_time = ((int) System.currentTimeMillis() / 1000);
 	}
 }
@@ -68,7 +69,11 @@ class BridgeEntry {
 class Table {
 	BridgeEntry[] entries;
 
-	boolean has_entry(MACAddress dest){
+	public Table(){
+		entries = new BridgeEntry[0];
+	}
+
+	public boolean has_entry(MACAddress dest){
 		for (int i = 0; i < entries.length; i ++){
 			BridgeEntry b = entries[i];
 			if (b.MacAddr.equals(dest)){
@@ -78,41 +83,42 @@ class Table {
 		return false;
 	}
 
-	void update_entries(MACAddress MAC, Iface interface){
+	public void update_entries(MACAddress MAC, Iface _interface){
 		BridgeEntry b;
 		for (int i = 0; i < entries.length; i ++){
 			b = entries[i];
-			if (b.macAddress.equals(MAC)){
+			if (b.MacAddr.equals(MAC)){
 				// found the entry with this mac address
-				b.interface = interface;
+				b.iface = _interface;
 				b.update_time = ((int) System.currentTimeMillis() / 1000);
 				return;
 			}
 		}
 		// didn't found entry in the table, append the new one
-		BridgeEntry entry = new BridgeEntry(MAC, interface);
-		temp = Arrays.copyOf(entries, entries.length + 1);
+		BridgeEntry entry = new BridgeEntry(MAC, _interface);
+		BridgeEntry[] temp = Arrays.copyOf(entries, entries.length + 1);
 		temp[temp.length - 1] = entry;
 		entries = Arrays.copyOf(temp, temp.length);
 	}
 
-	BridgeEntry get_entry(MACAddress MacAddr){
-		BridgeEntry b;
+	public BridgeEntry get_entry(MACAddress MAC){
+		BridgeEntry b = null;
 		for (int i = 0; i < entries.length; i ++){
 			b = entries[i];
-			if (b.macAddress.equals(MacAddr)){
+			if (b.MacAddr.equals(MAC)){
 				return b;
 			}
 		}
 		return b;
 	}
 
-	void sweep(){
+	public void sweep(){
 		Boolean done = false;
+		int i = 0;
 		while(!done){
 			if (i < entries.length){
 				BridgeEntry b = entries[i];
-				if ((((int) System.currentTimeMillis() / 1000) - b.update_time) > = 15){
+				if ((((int) System.currentTimeMillis() / 1000) - b.update_time) > 15){
 					remove_element(i);
 				}
 			}
@@ -123,10 +129,10 @@ class Table {
 		}
 	}
 
-	void remove_element(int indx){
-		BridgeEntry[] temp = new BridgeEntry[entries.length - 1]]
-		i = 0;
-		x = 0;
+	public void remove_element(int indx){
+		BridgeEntry[] temp = new BridgeEntry[entries.length - 1];
+		int i = 0;
+		int x = 0;
 		while (i < temp.length){
 			if (x == indx){
 				x++;
@@ -134,16 +140,6 @@ class Table {
 			temp[i] = entries[x];
 			x++;
 			i ++;
-		}
-		for (int i = 0; i < entries.length; i ++){
-			if (i != indx){
-				temp[i] = entries[i];
-			}
-			else {
-				if ( i + 1 < entries.length){
-					temp[i] = entries[i + 1];
-				}
-			}
 		}
 		entries = Arrays.copyOf(temp, temp.length);
 	}
