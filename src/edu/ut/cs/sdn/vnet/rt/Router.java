@@ -5,6 +5,7 @@ import edu.ut.cs.sdn.vnet.DumpFile;
 import edu.ut.cs.sdn.vnet.Iface;
 
 import net.floodlightcontroller.packet.Ethernet;
+import net.floodlightcontroller.packet.IPv4;
 
 /**
  * @author Aaron Gember-Jacobson and Anubhavnidhi Abhashkumar
@@ -84,7 +85,10 @@ public class Router extends Device
 		
 		/********************************************************************/
 		/* TODO: Handle packets                                             */
-		
+		if (Ethernet.TYPE_IPv4 == etherPacket.getEtherType()) {
+			IPv4 packetHeader = (IPv4) etherPacket.getPayload();
+
+		}
 		
 		/********************************************************************/
 	}
