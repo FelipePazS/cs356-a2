@@ -6,6 +6,7 @@ import edu.ut.cs.sdn.vnet.Iface;
 
 import net.floodlightcontroller.packet.Ethernet;
 import net.floodlightcontroller.packet.IPv4;
+import net.floodlightcontroller.packet.MACAddress;
 
 /**
  * @author Aaron Gember-Jacobson and Anubhavnidhi Abhashkumar
@@ -85,11 +86,43 @@ public class Router extends Device
 		
 		/********************************************************************/
 		/* TODO: Handle packets                                             */
-		if (Ethernet.TYPE_IPv4 == etherPacket.getEtherType()) {
-			IPv4 packetHeader = (IPv4) etherPacket.getPayload();
-
+		// IPv4 Check
+		if (Ethernet.TYPE_IPv4 != etherPacket.getEtherType()) {
+			System.out.println("Packet is not IPv4");
+			return;
 		}
-		
+
+		IPv4 packetHeader = (IPv4) etherPacket.getPayload();
+		// Check Ttl
+		byte oldTtl = packetHeader.getTtl();
+		packetHeader.setTtl(--oldTtl);
+		if (0 == packetHeader.getTtl()) {
+			System.out.println("Ttl == 0");
+			return;
+		}
+		// Check interfaces
+		int dstAddress = packetHeader.getDestinationAddress();
+		for (Iface iFace : interfaces.values()) {
+			if (dstAddress == iFace.getIpAddress()) {
+				return;
+			}
+		}
+		// Forward
+		RouteEntry entry = routeTable.lookup(dstAddress);
+		if (entry == null) {
+			System.out.println("Couldn't find address in route table");
+			return;
+		}
+		// Update MACs for packet
+		int nextHopAddr = entry.getGatewayAddress();
+		ArpEntry arpEntry = arpCache.lookup(nextHopAddr);
+		MACAddress arpMAC = arpEntry.getMac();
+		etherPacket.setDestinationMACAddress(arpMAC.toBytes());
+		Iface entryInterface = entry.getInterface();
+		MACAddress iFaceMAC = entryInterface.getMacAddress();
+		etherPacket.setSourceMACAddress(iFaceMAC.toBytes());
+		sendPacket(etherPacket, entryInterface);
+
 		/********************************************************************/
 	}
 }
