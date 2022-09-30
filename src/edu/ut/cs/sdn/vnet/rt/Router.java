@@ -5,6 +5,7 @@ import edu.ut.cs.sdn.vnet.DumpFile;
 import edu.ut.cs.sdn.vnet.Iface;
 
 import net.floodlightcontroller.packet.Ethernet;
+import net.floodlightcontroller.packet.IPacket;
 import net.floodlightcontroller.packet.IPv4;
 import net.floodlightcontroller.packet.MACAddress;
 
@@ -92,7 +93,16 @@ public class Router extends Device
 			return;
 		}
 
+		// Verify Checksum
 		IPv4 packetHeader = (IPv4) etherPacket.getPayload();
+		short checkSum = packetHeader.getChecksum();
+		packetHeader.resetChecksum();
+		byte[] serializedHeader = packetHeader.serialize();
+		IPacket deserializedHeader = packetHeader.deserialize(serializedHeader, 0, serializedHeader.length);
+		short newCheckSum = ((IPv4) deserializedHeader.getPayload()).getChecksum();
+		if (checkSum != newCheckSum) {
+			return;
+		}
 		// Check Ttl
 		byte oldTtl = packetHeader.getTtl();
 		packetHeader.setTtl(--oldTtl);
