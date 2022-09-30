@@ -112,7 +112,6 @@ public class Router extends Device
 			return;
 		}
 		// Check interfaces
-
 		int dstAddress = packetHeader.getDestinationAddress();
 		for (Iface iFace : interfaces.values()) {
 			if (dstAddress == iFace.getIpAddress()) {
@@ -133,10 +132,10 @@ public class Router extends Device
 			return;
 		}
 		MACAddress arpMAC = arpEntry.getMac();
-		etherPacket.setDestinationMACAddress(arpMAC.toBytes());
+		etherPacket = etherPacket.setDestinationMACAddress(arpMAC.toBytes());
 		Iface entryInterface = entry.getInterface();
 		MACAddress iFaceMAC = entryInterface.getMacAddress();
-		etherPacket.setSourceMACAddress(iFaceMAC.toBytes());
+		etherPacket = etherPacket.setSourceMACAddress(iFaceMAC.toBytes());
 		sendPacket(etherPacket, entryInterface);
 
 		/********************************************************************/
