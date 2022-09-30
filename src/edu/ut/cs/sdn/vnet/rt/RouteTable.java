@@ -47,7 +47,7 @@ public class RouteTable
 				int entryPrefix = entryDestinationAddress & entrySubnetMask;
 				int ipPrefix = ip & entrySubnetMask;
 				// Check prefixes
-				if (entryPrefix == ipPrefix || bestMatchEntry == null) {
+				if (entryPrefix == ipPrefix) {
 					int bestMatchEntryMask = bestMatchEntry.getMaskAddress();
 					// Choose address with longest subnet mask
 					bestMatchEntry = entrySubnetMask > bestMatchEntryMask ? entry : bestMatchEntry;
