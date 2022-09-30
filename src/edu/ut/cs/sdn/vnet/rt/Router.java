@@ -112,6 +112,7 @@ public class Router extends Device
 			return;
 		}
 		// Check interfaces
+
 		int dstAddress = packetHeader.getDestinationAddress();
 		for (Iface iFace : interfaces.values()) {
 			if (dstAddress == iFace.getIpAddress()) {
@@ -125,7 +126,7 @@ public class Router extends Device
 			return;
 		}
 		// Update MACs for packet
-		int nextHopAddr = entry.getGatewayAddress();
+		int nextHopAddr = entry.getGatewayAddress() != 0 ? entry.getGatewayAddress() : dstAddress;
 		ArpEntry arpEntry = arpCache.lookup(nextHopAddr);
 		if (arpEntry == null) {
 			System.out.println("Couldnt find arp entry");
