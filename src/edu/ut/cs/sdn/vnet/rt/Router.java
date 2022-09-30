@@ -127,6 +127,10 @@ public class Router extends Device
 		// Update MACs for packet
 		int nextHopAddr = entry.getGatewayAddress();
 		ArpEntry arpEntry = arpCache.lookup(nextHopAddr);
+		if (arpEntry == null) {
+			System.out.println("Couldnt find arp entry");
+			return;
+		}
 		MACAddress arpMAC = arpEntry.getMac();
 		etherPacket.setDestinationMACAddress(arpMAC.toBytes());
 		Iface entryInterface = entry.getInterface();
