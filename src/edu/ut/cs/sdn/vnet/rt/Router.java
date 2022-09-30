@@ -101,6 +101,7 @@ public class Router extends Device
 		IPacket deserializedHeader = packetHeader.deserialize(serializedHeader, 0, serializedHeader.length);
 		short newCheckSum = ((IPv4) deserializedHeader.getPayload()).getChecksum();
 		if (checkSum != newCheckSum) {
+			System.out.println("Checksum verification failed");
 			return;
 		}
 		// Check Ttl
