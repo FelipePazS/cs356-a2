@@ -48,9 +48,13 @@ public class RouteTable
 				int ipPrefix = ip & entrySubnetMask;
 				// Check prefixes
 				if (entryPrefix == ipPrefix) {
-					int bestMatchEntryMask = bestMatchEntry.getMaskAddress();
-					// Choose address with longest subnet mask
-					bestMatchEntry = entrySubnetMask > bestMatchEntryMask ? entry : bestMatchEntry;
+					if (bestMatchEntry == null) {
+						bestMatchEntry = entry;
+					} else {
+						int bestMatchEntryMask = bestMatchEntry.getMaskAddress();
+						// Choose address with longest subnet mask
+						bestMatchEntry = entrySubnetMask > bestMatchEntryMask ? entry : bestMatchEntry;
+					}
 				}
 			}
 			return bestMatchEntry;
