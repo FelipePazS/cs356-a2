@@ -98,7 +98,7 @@ public class Router extends Device
 		short checkSum = packetHeader.getChecksum();
 		packetHeader.resetChecksum();
 		byte[] serializedHeader = packetHeader.serialize();
-		packetHeader = (IPv4) packetHeader.deserialize(serializedHeader, 0, serializedHeader.length);
+		packetHeader.deserialize(serializedHeader, 0, serializedHeader.length);
 		short newCheckSum = packetHeader.getChecksum();
 		if (checkSum != newCheckSum) {
 			System.out.println("Checksum verification failed");
