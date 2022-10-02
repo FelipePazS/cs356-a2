@@ -111,6 +111,15 @@ public class Router extends Device
 			System.out.println("Ttl == 0");
 			return;
 		}
+
+		// put the new checksum into the header
+		packetHeader.resetChecksum();
+		serializedHeader = packetHeader.serialize();
+		packetHeader = (IPv4) packetHeader.deserialize(serializedHeader, 0, serializedHeader.length);
+		newCheckSum = packetHeader.getChecksum();
+		packetHeader.setChecksum(newCheckSum);
+		etherPacket.setPayload((IPacket) packetHeader);
+
 		// Check interfaces
 		int dstAddress = packetHeader.getDestinationAddress();
 		for (Iface iFace : interfaces.values()) {
@@ -136,7 +145,9 @@ public class Router extends Device
 		Iface entryInterface = entry.getInterface();
 		MACAddress iFaceMAC = entryInterface.getMacAddress();
 		etherPacket = etherPacket.setSourceMACAddress(iFaceMAC.toBytes());
-		sendPacket(etherPacket, entryInterface);
+		if (!entryInterface.equals(inIface)){
+			sendPacket(etherPacket, entryInterface);
+		}
 
 		/********************************************************************/
 	}
